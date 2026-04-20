@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { addPassword } from "../redux/passwordSlice";
+import { encryptData } from "../utils/encryption";
 import API from "../services/API";
 import "./PasswordForm.css";
 
@@ -12,19 +13,39 @@ function PasswordForm() {
   const [password, setPassword] = useState("");
 
   const handleSubmit = async () => {
-    const res = await API.post("/add-password", {
-      site,
-      username,
-      password,
-    });
+  try {
+    const uid = localStorage.getItem("uid");
+    const key = sessionStorage.getItem("encKey");
 
-    dispatch(addPassword(res.data));
+    if (!key) {
+      alert("Session expired. Please login again.");
+      return;
+    }
 
-    // clear inputs
+    const encryptedPassword = encryptData(password, key);
+
+    const formData = new FormData();
+    formData.append("url", site);
+    formData.append("uid", uid);
+    formData.append("username", username);
+    formData.append("email", username);
+    formData.append("password", encryptedPassword);
+
+    const res = await API.post("/newpasswordstore", formData);
+
+    dispatch(addPassword({
+      ...res.data,
+      password, // store decrypted in redux for UI
+    }));
+
     setSite("");
     setUsername("");
     setPassword("");
-  };
+
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   return (
     <div className="form-container">

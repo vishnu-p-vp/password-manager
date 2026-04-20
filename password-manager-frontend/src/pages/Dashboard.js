@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import API from "../services/API"; // lowercase
 import { useDispatch, useSelector } from "react-redux";
-import { setPasswords } from "../redux/passwordSlice";
+import { setPasswords, deletePassword } from "../redux/passwordSlice";
+import { decryptData } from "../utils/encryption";
+import { encryptData } from "../utils/encryption";
 import "./Dashboard.css";
 
 function Dashboard() {
@@ -11,13 +13,28 @@ function Dashboard() {
   const [showPasswords, setShowPasswords] = useState({}); // track show/hide for each password
 
   const fetchPasswords = async () => {
-    try {
-      const res = await API.get("/passwords");
-      dispatch(setPasswords(res.data));
-    } catch (err) {
-      console.error(err);
+  try {
+    const uid = localStorage.getItem("uid");
+    const key = sessionStorage.getItem("encKey");
+
+    if (!key) {
+      alert("Session expired. Please login again.");
+      return;
     }
-  };
+
+    const res = await API.get(`/getallpasswords?uid=${uid}`);
+
+    const decrypted = res.data.map((item) => ({
+      ...item,
+      password: decryptData(item.password, key),
+    }));
+
+    dispatch(setPasswords(decrypted));
+
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const passwords1 = [
     {
@@ -44,6 +61,25 @@ function Dashboard() {
     fetchPasswords();
   }, []);
 
+
+
+const handleDelete = async (item) => {
+  try {
+    const uid = localStorage.getItem("uid");
+    const key = sessionStorage.getItem("encKey");
+
+    const encryptedPassword = encryptData(item.password, key);
+
+    await API.delete(
+      `/deletepassword?uid=${uid}&password=${encryptedPassword}`
+    );
+
+    dispatch(deletePassword(item._id));
+  } catch (err) {
+    console.error(err);
+  }
+};
+
   // toggle visibility for a password
   const togglePassword = (id) => {
     setShowPasswords((prev) => ({
@@ -69,16 +105,16 @@ function Dashboard() {
           </thead>
 
           <tbody>
-            {passwords1.map((item) => (
-              <tr key={item.id}>
+            {passwords.map((item) => (
+              <tr key={item._id}>
                 <td>{item.site}</td>
                 <td>{item.username}</td>
                 <td>
                   <div className="password-cell">
-                    {showPasswords[item.id] ? item.password : "••••••••"}
+                    {showPasswords[item._id] ? item.password : "••••••••"}
                     <span
                       className="toggle-password"
-                      onClick={() => togglePassword(item.id)}
+                      onClick={() => togglePassword(item._id)}
                     >
                       {showPasswords[item.id] ? (
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#4f46e5" viewBox="0 0 24 24">
@@ -93,7 +129,12 @@ function Dashboard() {
                   </div>
                 </td>
                 <td>
-                  <button className="delete-btn">Delete</button>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(item)}
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
