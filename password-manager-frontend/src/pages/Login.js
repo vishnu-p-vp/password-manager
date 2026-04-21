@@ -11,7 +11,7 @@ function Login() {
 
   const dispatch = useDispatch();
   
-  const [email, setEmail] = useState("");
+  const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
@@ -26,11 +26,10 @@ function Login() {
     // 🔐 hash for backend auth
     const hashedPassword = CryptoJS.SHA256(password).toString();
 
-    const formData = new FormData();
-    formData.append("email", email);
-    formData.append("hashed_master_password", hashedPassword);
-
-    const res = await API.post("/login", formData);
+    const res = await API.post("/login", {
+      usernameOrEmail,
+      hashedPassword,
+    });
 
     localStorage.setItem("token", res.data.token);
     localStorage.setItem("uid", res.data.uid);
@@ -50,10 +49,10 @@ function Login() {
     <p className="subtitle">Login to your account</p>
 
     <input
-  type="email"
-  placeholder="Email"
-  value={email}
-  onChange={(e) => setEmail(e.target.value)}
+  type="text"
+  placeholder="Username or Email"
+  value={usernameOrEmail}
+  onChange={(e) => setUsernameOrEmail(e.target.value)}
 />
 
 <input

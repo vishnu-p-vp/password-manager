@@ -7,6 +7,7 @@ import "../pages/login.css"; // reuse same design
 function Register() {
   const navigate = useNavigate();
 
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -15,11 +16,11 @@ const handleRegister = async () => {
   try {
     const hashedPassword = CryptoJS.SHA256(password).toString();
 
-    const formData = new FormData();
-    formData.append("email", email);
-    formData.append("hashed_password", hashedPassword);
-
-    await API.post("/register", formData);
+    const res = await API.post("/register", {
+      username,
+      email,
+      hashedPassword,
+    });
 
     alert("Registration successful!");
     navigate("/");
@@ -33,6 +34,13 @@ const handleRegister = async () => {
       <div className="login-box">
         <h2>Create Account 📝</h2>
         <p className="subtitle">Register to get started</p>
+
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
 
         <input
           type="email"

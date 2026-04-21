@@ -22,7 +22,7 @@ function Dashboard() {
       return;
     }
 
-    const res = await API.get(`/getallpasswords?uid=${uid}`);
+    const res = await API.get(`/passwords?uid=${uid}`);
 
     const decrypted = res.data.map((item) => ({
       ...item,

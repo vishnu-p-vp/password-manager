@@ -8,7 +8,7 @@ import "./PasswordForm.css";
 function PasswordForm() {
   const dispatch = useDispatch(); 
 
-  const [site, setSite] = useState("");
+  const [website, setSite] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -25,13 +25,13 @@ function PasswordForm() {
     const encryptedPassword = encryptData(password, key);
 
     const formData = new FormData();
-    formData.append("url", site);
+    formData.append("url", website);
     formData.append("uid", uid);
     formData.append("username", username);
     formData.append("email", username);
     formData.append("password", encryptedPassword);
 
-    const res = await API.post("/newpasswordstore", formData);
+    const res = await API.post("/passwords", formData);
 
     dispatch(addPassword({
       ...res.data,
@@ -53,15 +53,15 @@ function PasswordForm() {
         <h2>Add New Password 🔑</h2>
 
         <input
-          type="text"
-          placeholder="Website / URL"
-          value={site}
+          type="url"
+          placeholder="Website"
+          value={website}
           onChange={(e) => setSite(e.target.value)}
         />
 
         <input
           type="text"
-          placeholder="Username / Email"
+          placeholder="Username or Email"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
