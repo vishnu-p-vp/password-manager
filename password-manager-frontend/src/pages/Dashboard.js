@@ -1,86 +1,63 @@
 import { useEffect, useState } from "react";
-import API from "../services/API"; // lowercase
+import API from "../services/API";
 import { useDispatch, useSelector } from "react-redux";
 import { setPasswords, deletePassword } from "../redux/passwordSlice";
 import { decryptData } from "../utils/encryption";
-import { encryptData } from "../utils/encryption";
 import "./Dashboard.css";
 
 function Dashboard() {
   const dispatch = useDispatch();
   const passwords = useSelector((state) => state.passwords.list);
 
-  const [showPasswords, setShowPasswords] = useState({}); // track show/hide for each password
+  const [showPasswords, setShowPasswords] = useState({});
 
   const fetchPasswords = async () => {
-  try {
-    const uid = localStorage.getItem("uid");
-    const key = sessionStorage.getItem("encKey");
+    try {
+      const uid = localStorage.getItem("uid");
+      const key = sessionStorage.getItem("encKey");
 
-    if (!key) {
-      alert("Session expired. Please login again.");
-      return;
+      if (!key) {
+        alert("Session expired. Please login again.");
+        return;
+      }
+
+      const res = await API.get(`/passwords?uid=${uid}`);
+
+      const decrypted = res.data.passwords.map((item) => ({
+        ...item,
+        site: item.website,
+        password: decryptData(item.password, key),
+      }));
+
+      dispatch(setPasswords(decrypted));
+    } catch (err) {
+      console.error(err);
     }
-
-    const res = await API.get(`/passwords?uid=${uid}`);
-
-    const decrypted = res.data.map((item) => ({
-      ...item,
-      password: decryptData(item.password, key),
-    }));
-
-    dispatch(setPasswords(decrypted));
-
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-  const passwords1 = [
-    {
-      id: 1,
-      site: "google.com",
-      username: "user1@gmail.com",
-      password: "123456",
-    },
-    {
-      id: 2,
-      site: "facebook.com",
-      username: "user2@gmail.com",
-      password: "abcdef",
-    },
-    {
-      id: 3,
-      site: "github.com",
-      username: "dev123",
-      password: "pass@123",
-    },
-  ];
+  };
 
   useEffect(() => {
     fetchPasswords();
   }, []);
 
+  const handleDelete = async (item) => {
+    try {
+      const confirmDelete = window.confirm(
+        `Are you sure you want to delete password for ${item.site}?`
+      );
 
+      if (!confirmDelete) return;
 
-const handleDelete = async (item) => {
-  try {
-    const uid = localStorage.getItem("uid");
-    const key = sessionStorage.getItem("encKey");
+      await API.delete(`/deletepassword?pid=${item.pid}`);
 
-    const encryptedPassword = encryptData(item.password, key);
+      dispatch(deletePassword(item.pid));
 
-    await API.delete(
-      `/deletepassword?uid=${uid}&password=${encryptedPassword}`
-    );
+      fetchPasswords();
 
-    dispatch(deletePassword(item._id));
-  } catch (err) {
-    console.error(err);
-  }
-};
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  // toggle visibility for a password
   const togglePassword = (id) => {
     setShowPasswords((prev) => ({
       ...prev,
@@ -106,17 +83,17 @@ const handleDelete = async (item) => {
 
           <tbody>
             {passwords.map((item) => (
-              <tr key={item._id}>
+              <tr key={item.pid}>
                 <td>{item.site}</td>
                 <td>{item.username}</td>
                 <td>
                   <div className="password-cell">
-                    {showPasswords[item._id] ? item.password : "••••••••"}
+                    {showPasswords[item.pid] ? item.password : "••••••••"}
                     <span
                       className="toggle-password"
-                      onClick={() => togglePassword(item._id)}
+                      onClick={() => togglePassword(item.pid)}
                     >
-                      {showPasswords[item.id] ? (
+                      {showPasswords[item.pid] ? (
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#4f46e5" viewBox="0 0 24 24">
                           <path d="M12 5c-7.633 0-12 7-12 7s4.367 7 12 7 12-7 12-7-4.367-7-12-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5zm0-8.5c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5z"/>
                         </svg>

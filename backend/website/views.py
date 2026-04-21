@@ -73,8 +73,13 @@ def register():
 def deregister():
     data = request.args
     uid = data.get("uid")
-    users.find_one_and_delete({"_id": ObjectId(uid)})
-    return jsonify({"status": "deleted"})
+    try:
+        passwords.delete_many({"uid": ObjectId(uid)})
+        users.find_one_and_delete({"_id": ObjectId(uid)})
+        return jsonify({"status": "deleted"})
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "failed, check logs"}), 500
 
 
 @views.route("/passwords", methods=["GET", "POST"])
@@ -83,7 +88,7 @@ def password():
     if request.method == "POST":
         # data = request.get_json()
         data = request.form
-        website = data["website"]
+        website = data["url"]
         uid = data["uid"]
         username = data["username"]
         # email = data["email"]
@@ -97,31 +102,43 @@ def password():
             "password": encrypted_password,
         }
         passwords.insert_one(dict)
-        return jsonify({"status": "one password inserted"})
+        return jsonify({"status": "one password inserted"}), 200
 
     data = request.args
     uid = data.get("uid")
     password_docs = passwords.aggregate(
         [
-            {"$match": {"uid": uid}},
-            {"$project": {"_id": 0, "master_email": 0}},
-            {"$group": {"_id": None, "data": {"$push": "$$ROOT"}}},
-            {"$project": {"_id": 0, "data": 1}},
+            {"$match": {"uid": ObjectId(uid)}},
+            {
+                "$project": {
+                    "_id": 0,
+                    "pid": {"$toString": "$_id"},
+                    "website": 1,
+                    "username": 1,
+                    "password": 1,
+                }
+            },
         ]
     )
-    if len(password_docs.to_list()) == 0:
+    data = password_docs.to_list()
+    if len(data) == 0:
         return jsonify({"passwords": []}), 200
-    data = list(password_docs)[0]["data"]
-    return jsonify(data), 200
+    return jsonify({"passwords": data}), 200
+
+
+@views.route("/passwords/count", methods=["GET"])
+def get_password_count():
+    uid = request.args.get("uid")
+    count = passwords.count_documents({"uid": ObjectId(uid)})
+    return jsonify({"count": count}), 200
 
 
 @views.route("/deletepassword", methods=["DELETE"])
 def delete_password():
     # data = request.get_json()
     data = request.args
-    uid = ObjectId(data.get("uid"))
-    password = data.get("password")
-    passwords.find_one_and_delete({"uid": uid, "password": password})
+    pid = ObjectId(data.get("pid"))
+    passwords.find_one_and_delete({"_id": pid})
     return jsonify({"status": "one password deleted"})
 
 

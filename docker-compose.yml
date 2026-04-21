@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  backend:
+    build: ./backend
+    image: password-backend:latest
+    ports:
+      - "5000:5000"
+    container_name: flask-backend
+
+  frontend:
+    build: ./password-manager-frontend
+    image: password-frontend:latest
+    ports:
+      - "3000:80"
+    container_name: react-frontend
+    depends_on:
+      - backend

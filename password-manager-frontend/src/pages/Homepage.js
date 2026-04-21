@@ -1,17 +1,37 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../services/API";
 
-const HomePage = ({ storedPasswords }) => {
+const HomePage = () => {
   const navigate = useNavigate();
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        const uid = localStorage.getItem("uid");
+
+        const res = await API.get("/passwords/count", {
+          params: { uid: uid },
+        });
+
+        setCount(res.data.count);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchCount();
+  }, []);
 
   return (
   <div
     style={{
-      minHeight: "100vh", /* full viewport height */
+      minHeight: "100vh",
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      background: "linear-gradient(135deg, #4f46e5, #9333ea)", /* same as login/dashboard */
+      background: "linear-gradient(135deg, #4f46e5, #9333ea)",
       padding: "20px"
     }}
   >
@@ -29,7 +49,7 @@ const HomePage = ({ storedPasswords }) => {
     >
       <h1 style={{ marginBottom: "20px" }}>Welcome!</h1>
       <p style={{ fontSize: "18px", marginBottom: "30px" }}>
-        You have <strong>{ storedPasswords==null ? "0" : storedPasswords?.length}</strong> passwords stored.
+        You have <strong>{count}</strong> passwords stored.
       </p>
 
       <div>

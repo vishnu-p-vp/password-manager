@@ -28,7 +28,7 @@ function PasswordForm() {
     formData.append("url", website);
     formData.append("uid", uid);
     formData.append("username", username);
-    formData.append("email", username);
+    // formData.append("email", username);
     formData.append("password", encryptedPassword);
 
     const res = await API.post("/passwords", formData);
