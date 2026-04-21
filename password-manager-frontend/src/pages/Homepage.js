@@ -29,7 +29,7 @@ const HomePage = ({ storedPasswords }) => {
     >
       <h1 style={{ marginBottom: "20px" }}>Welcome!</h1>
       <p style={{ fontSize: "18px", marginBottom: "30px" }}>
-        You have <strong>{ storedPasswords==null ? "3" : storedPasswords?.length}</strong> passwords stored.
+        You have <strong>{ storedPasswords==null ? "0" : storedPasswords?.length}</strong> passwords stored.
       </p>
 
       <div>
