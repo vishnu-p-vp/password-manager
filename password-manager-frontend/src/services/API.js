@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000", // Flask backend URL
+  baseURL: "/api", // Flask backend URL
 });
 
 // Attach token automatically
