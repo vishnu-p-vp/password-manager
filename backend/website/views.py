@@ -142,7 +142,6 @@ def delete_password():
     return jsonify({"status": "one password deleted"})
 
 
-@views.route("/test", methods=["GET"])
+@views.route("/health", methods=["GET"])
 def test():
-    print({"_id": ObjectId("69ba81aebbba773ff1947b70")})
-    return "Done"
+    return "Done", 200
