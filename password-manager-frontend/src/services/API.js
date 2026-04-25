@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://password-manager-alb-001-936983451.ap-south-1.elb.amazonaws.com", // Flask backend URL
+  baseURL: "http://password-manager-alb-001-936983451.ap-south-1.elb.amazonaws.com",
 });
 
 // Attach token automatically
